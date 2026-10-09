@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import anthropic
 from dotenv import load_dotenv
@@ -8,7 +9,7 @@ from faultline import db
 
 load_dotenv()
 
-_MODEL = "claude-sonnet-4-20250514"
+_DEFAULT_MODEL = "claude-sonnet-5-5"
 
 # PROMPT TEMPLATE — keep stable so cache_control can warm across calls
 _SYSTEM_PROMPT = """\
@@ -24,6 +25,26 @@ The JSON must contain exactly these keys:
 """
 
 
+def _parse_report(raw: str) -> dict:
+    """Parse Claude's reply as a JSON object, tolerating code fences or stray prose."""
+    text = raw.strip()
+    candidates = [text]
+    fenced = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
+    if fenced:
+        candidates.append(fenced.group(1).strip())
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end > start:
+        candidates.append(text[start : end + 1])
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    raise ValueError("no JSON object found")
+
+
 def analyze_failure(trace: dict) -> dict:
     client = anthropic.Anthropic()
 
@@ -36,7 +57,7 @@ def analyze_failure(trace: dict) -> dict:
     )
 
     message = client.messages.create(
-        model=_MODEL,
+        model=os.environ.get("FAULTLINE_MODEL", _DEFAULT_MODEL),
         max_tokens=1024,
         system=[
             {
@@ -48,11 +69,11 @@ def analyze_failure(trace: dict) -> dict:
         messages=[{"role": "user", "content": user_message}],
     )
 
-    raw = message.content[0].text
+    raw = next((b.text for b in message.content if b.type == "text"), "")
 
     try:
-        report = json.loads(raw)
-    except json.JSONDecodeError:
+        report = _parse_report(raw)
+    except ValueError:
         report = {
             "summary": "Claude response could not be parsed as JSON",
             "likely_cause": "Claude did not return valid JSON",

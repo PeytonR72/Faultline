@@ -101,3 +101,34 @@ def test_wrapper_preserves_original_exception_type(fresh_db, monkeypatch):
 
     with pytest.raises(MyCustomError):
         wrapped({})
+
+
+def test_analyzer_failure_does_not_mask_node_error(fresh_db, monkeypatch):
+    _silence_reporter(monkeypatch)
+    monkeypatch.setattr("faultline.reporter.report_analysis_unavailable", lambda _t, _e: None)
+
+    def boom(_trace):
+        raise ConnectionError("api down")
+
+    monkeypatch.setattr("faultline.analyzer.analyze_failure", boom)
+
+    def broken(_state):
+        raise ValueError("original")
+
+    with pytest.raises(ValueError, match="original"):
+        tracer.wrap_node("broken", broken)({})
+
+    assert db.get_traces_for_node("broken")[0]["success"] == 0
+
+
+def test_async_node_failure_reraises(fresh_db, monkeypatch):
+    _silence_reporter(monkeypatch)
+    _stub_analyzer(monkeypatch)
+
+    async def broken(_state):
+        raise KeyError("k")
+
+    with pytest.raises(KeyError):
+        asyncio.run(tracer.wrap_node("abroken", broken)({}))
+
+    assert db.get_traces_for_node("abroken")[0]["error_type"] == "KeyError"

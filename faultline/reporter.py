@@ -45,3 +45,17 @@ def report_trace(trace: dict) -> None:
         f"  [dim]{latency_ms:.1f} ms[/]"
         f"  [dim]{created_at}[/]"
     )
+
+
+def report_analysis_unavailable(trace: dict, exc: Exception) -> None:
+    node_name = trace.get("node_name", "unknown")
+    _console.print(
+        Panel(
+            f"{trace.get('error_type')}: {trace.get('error_message')}\n\n"
+            f"[dim]AI analysis unavailable ({type(exc).__name__}: {exc}). "
+            "The trace was still recorded.[/]",
+            title=Text(f" {node_name} ", style="bold"),
+            title_align="left",
+            border_style="yellow",
+        )
+    )
