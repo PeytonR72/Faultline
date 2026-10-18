@@ -1,16 +1,16 @@
 import React, {useState} from 'react';
-import {AbsoluteFill, Composition, continueRender, delayRender, staticFile} from 'remotion';
+import {AbsoluteFill, Composition, Easing, continueRender, delayRender, staticFile} from 'remotion';
 import {TransitionSeries, linearTiming} from '@remotion/transitions';
-import {fade} from '@remotion/transitions/fade';
-import {slide} from '@remotion/transitions/slide';
+import type {TransitionPresentation, TransitionPresentationComponentProps} from '@remotion/transitions';
 import {Background} from './components';
 import {Diagnose, Engineering, Hook, Instrument, Outro, Reveal, Stack, Trace} from './scenes';
 import {FPS, HEIGHT, WIDTH} from './theme';
 
 // Scene lengths in frames. Each transition overlaps neighbours by T frames,
 // so the timeline totals sum(SCENES) - T * (SCENES.length - 1) = 1800 (60 s).
-export const T = 15;
-export const SCENES = {hook: 150, reveal: 150, instrument: 240, trace: 330, diagnose: 360, engineering: 270, stack: 150, outro: 255};
+// Scene i enters at 4.5, 9, 16.5, 27, 38.5, 47 and 51.5 s; scripts/soundtrack.sh relies on that.
+export const T = 27;
+export const SCENES = {hook: 162, reveal: 162, instrument: 252, trace: 342, diagnose: 372, engineering: 282, stack: 162, outro: 255};
 const TOTAL = Object.values(SCENES).reduce((a, b) => a + b, 0) - T * (Object.keys(SCENES).length - 1);
 
 const FONTS: [string, string, number][] = [
@@ -37,9 +37,41 @@ const useFonts = () => {
   });
 };
 
-const timing = linearTiming({durationInFrames: T});
-const fromRight = slide({direction: 'from-right'});
-const fromBottom = slide({direction: 'from-bottom'});
+// Soft dissolve: the outgoing scene recedes and blurs while the incoming one
+// drifts a short distance into place and comes into focus.
+type DriftProps = {dx: number; dy: number};
+
+const DriftDissolve: React.FC<TransitionPresentationComponentProps<DriftProps>> = ({
+  children,
+  presentationDirection,
+  presentationProgress: p,
+  passedProps: {dx, dy},
+}) => {
+  const entering = presentationDirection === 'entering';
+  const k = entering ? 1 - p : p; // 0 = settled, 1 = fully away
+  const style: React.CSSProperties = entering
+    ? {
+        opacity: p,
+        transform: `translate(${dx * k}px, ${dy * k}px) scale(${1 + 0.03 * k})`,
+        filter: `blur(${10 * k}px)`,
+      }
+    : {
+        opacity: 1 - p,
+        transform: `translate(${-dx * 0.6 * k}px, ${-dy * 0.6 * k}px) scale(${1 - 0.04 * k})`,
+        filter: `blur(${10 * k}px)`,
+      };
+  return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
+};
+
+const drift = (dx: number, dy: number): TransitionPresentation<DriftProps> => ({
+  component: DriftDissolve,
+  props: {dx, dy},
+});
+
+const timing = linearTiming({durationInFrames: T, easing: Easing.inOut(Easing.cubic)});
+const still = drift(0, 0);
+const fromRight = drift(70, 0);
+const fromBottom = drift(0, 50);
 
 export const FaultlineDemo: React.FC = () => {
   useFonts();
@@ -50,7 +82,7 @@ export const FaultlineDemo: React.FC = () => {
         <TransitionSeries.Sequence durationInFrames={SCENES.hook}>
           <Hook />
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={timing} />
+        <TransitionSeries.Transition presentation={still} timing={timing} />
         <TransitionSeries.Sequence durationInFrames={SCENES.reveal}>
           <Reveal />
         </TransitionSeries.Sequence>
@@ -74,7 +106,7 @@ export const FaultlineDemo: React.FC = () => {
         <TransitionSeries.Sequence durationInFrames={SCENES.stack}>
           <Stack />
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={timing} />
+        <TransitionSeries.Transition presentation={still} timing={timing} />
         <TransitionSeries.Sequence durationInFrames={SCENES.outro}>
           <Outro durationInFrames={SCENES.outro} />
         </TransitionSeries.Sequence>
