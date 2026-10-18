@@ -22,7 +22,7 @@ Set `REMOTION_BROWSER=/path/to/chrome-headless-shell` to reuse an existing brows
 | `scripts/soundtrack.sh` | Synthesises the score with ffmpeg; hits are synced to scene cuts |
 | `scripts/build.sh` | Render → score → H.264/AAC faststart encode → poster |
 
-If you change scene lengths in `Root.tsx`, update the `WHOOSH_AT` / `IMPACT_AT` times in `soundtrack.sh` to match.
+If you change scene lengths in `Root.tsx`, update the `SWOOSH_AT` / `IMPACT_AT` times in `soundtrack.sh` to match.
 
 ## Story beats
 
