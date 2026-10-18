@@ -2,6 +2,10 @@
 
 Faultline is a lightweight execution tracer for [LangGraph](https://github.com/langchain-ai/langgraph) that captures every node run to SQLite and uses Claude to generate structured root-cause reports the moment a node throws. Wrap a node with `wrap_node`, and you get latency tracking, persistent trace history, and an AI-authored failure report (summary, likely cause, suggested fix, severity) printed to your console without changing how the node behaves from LangGraph's perspective.
 
+[![Watch the one-minute Faultline demo](assets/faultline-demo-poster.jpg)](assets/faultline-demo.mp4)
+
+▶ **[Watch the 60-second demo](assets/faultline-demo.mp4)**. Motion graphics built with [Remotion](https://www.remotion.dev) and scored with ffmpeg; source in [`video/`](video/).
+
 ![Faultline demo](assets/demo.svg)
 
 ## Why
@@ -103,7 +107,10 @@ faultline/
 │   ├── test_analyzer.py
 │   └── test_reporter.py
 ├── assets/
-│   └── demo.svg
+│   ├── demo.svg
+│   ├── faultline-demo.mp4
+│   └── faultline-demo-poster.jpg
+├── video/               # Remotion + ffmpeg source for the demo video
 ├── requirements.txt
 ├── .env.example
 └── README.md
