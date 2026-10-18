@@ -1,6 +1,6 @@
 # Faultline demo video
 
-Source for [`assets/faultline-demo.mp4`](../assets/faultline-demo.mp4): a 60-second, 1080p30 motion-graphics demo. It is built with [Remotion](https://www.remotion.dev) (React → frames) and finished with ffmpeg (procedural soundtrack, mux, web encode).
+Source for [`assets/faultline-demo.mp4`](../assets/faultline-demo.mp4): a 60-second, 1080p30 motion-graphics demo. It is built with [Remotion](https://www.remotion.dev) (React → frames) and finished with ffmpeg (web encode, poster frame). It ships silent; `SOUNDTRACK=1 npm run render` mixes in an optional procedural score.
 
 ```bash
 cd video
@@ -19,8 +19,8 @@ Set `REMOTION_BROWSER=/path/to/chrome-headless-shell` to reuse an existing brows
 | `src/scenes.tsx` | The eight scenes: hook, reveal, instrument, trace, diagnose, engineered, architecture, outro |
 | `src/components.tsx` | Background, titles, window chrome, the cracked `Faultline` logo |
 | `src/theme.ts` | Palette, fonts and animation helpers |
-| `scripts/soundtrack.sh` | Synthesises the score with ffmpeg; hits are synced to scene cuts |
-| `scripts/build.sh` | Render → score → H.264/AAC faststart encode → poster |
+| `scripts/soundtrack.sh` | Optional score synthesised with ffmpeg; hits are synced to scene cuts |
+| `scripts/build.sh` | Render → (optional score) → H.264 faststart encode → poster |
 
 If you change scene lengths in `Root.tsx`, update the `SWOOSH_AT` / `IMPACT_AT` times in `soundtrack.sh` to match.
 

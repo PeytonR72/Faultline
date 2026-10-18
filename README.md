@@ -4,7 +4,7 @@ Faultline is a lightweight execution tracer for [LangGraph](https://github.com/l
 
 [![Watch the one-minute Faultline demo](assets/faultline-demo-poster.jpg)](assets/faultline-demo.mp4)
 
-▶ **[Watch the 60-second demo](assets/faultline-demo.mp4)**. Motion graphics built with [Remotion](https://www.remotion.dev) and scored with ffmpeg; source in [`video/`](video/).
+▶ **[Watch the 60-second demo](assets/faultline-demo.mp4)**. Motion graphics built with [Remotion](https://www.remotion.dev) and encoded with ffmpeg; source in [`video/`](video/).
 
 ![Faultline demo](assets/demo.svg)
 
